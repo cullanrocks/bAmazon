@@ -1,4 +1,4 @@
-var prettyLines = "===============================================================================";
+var prettyLines = "================================================================================";
 var connection = require("./validation.js");
 var inquirer = require("inquirer");
 var columnify = require('columnify');
@@ -15,24 +15,23 @@ function menu() {
         type: "list",
         name: "menu",
         message: "Welcome, Mr. Manager. Please select an option:",
-        choices: ["View Inventory", "View Low Inventory", "Restock Inventory", "Add New Product"],
+        choices: ["View Inventory", "View Low Inventory", "Restock Inventory", "Add New Product", "View Sales Report"],
     }]).then(function(response) {
         switch (response.menu) {
             case "View Inventory":
-                // console.log("view products")
                 viewInventory();
                 break;
             case "View Low Inventory":
-                // console.log("view low")
                 viewLow();
                 break;
             case "Restock Inventory":
-                // console.log("add products")
                 restock();
                 break;
             case "Add New Product":
-                // console.log("add new")
                 addNew();
+                break;
+            case "View Sales Report":
+                salesReport();
                 break;
         }
     })
@@ -41,7 +40,7 @@ function menu() {
 function viewInventory() {
     connection.query("SELECT * FROM products", function(err, res) {
         if (err) throw err;
-        console.log(`${prettyLines}\n FULL INVENTORY:\n${prettyLines}`)
+        console.log(`${prettyLines}\n================================== FULL INVENTORY ==============================\n${prettyLines}`)
         dataArray = [];
         generateTable(res);
         console.log(columns)
@@ -63,8 +62,8 @@ function generateTable(res) {
         dataArray.push(data);
         columns = columnify(dataArray, {
             columns: ['item_id', 'product_name', 'department_name', 'price', 'stock_quantity'],
-            columnSplitter: ' | ',
-            paddingChr: '.'
+            columnSplitter: '__|__',
+            paddingChr: '_'
         })
     }
 }
@@ -72,7 +71,7 @@ function generateTable(res) {
 function viewLow() {
     connection.query("SELECT * FROM products WHERE stock_quantity<5", function(err, res) {
         if (err) throw err;
-        console.log(`${prettyLines}\n LOW INVENTORY:\n${prettyLines}`);
+        console.log(`${prettyLines}\n=============================== LOW INVENTORY ==================================\n${prettyLines}`);
         dataArray = [];
         generateTable(res);
         console.log(columns);
@@ -103,12 +102,12 @@ function restock() {
             return false;
         }
     }]).then(function(purchase) {
-        // newPurchaseID = purchase.productID;
-        // purchaseQuantity = purchase.quantity;
+        newPurchaseID = purchase.productID;
+        purchaseQuantity = purchase.quantity;
         connection.query(`SELECT * FROM products WHERE item_id=?`, [purchase.productID], function(err, res) {
             newStock = parseInt(res[0].stock_quantity) + parseInt(purchase.quantity);
             console.log(newStock)
-            update(newStock, purchase.productID);
+            update(newStock, newPurchaseID);
         })
     })
 }
@@ -151,7 +150,34 @@ function update(stock, id) {
     }]), function(err, res){
 		if (err) throw err;
     }
-    console.log("Inventory updated");
+    // console.log("Inventory updated");
     viewInventory();
 }
-
+function generateSales(res) {
+    for (var i = 0; i < res.length; i++) {
+        itemsInStock = res.length;
+        data = {
+            department_id: res[i].department_id,
+            department_name: res[i].department_name,
+            overhead_costs: `$${res[i].overhead_costs}`,
+            total_sales: `$${res[i].total_sales}`,
+        };
+        dataArray.push(data);
+        columns = columnify(dataArray, {
+            columns: ['department_id', 'department_name', 'overhead_costs', 'total_sales'],
+            columnSplitter: '__|__',
+            paddingChr: '_'
+        })
+    }
+}
+function salesReport(res){
+    connection.query('SELECT * FROM departments', function(err, res){
+        if (err) throw err;
+        console.log(`${prettyLines}\n=================================== SALES REPORT ===============================\n${prettyLines}`);
+        dataArray = [];
+        generateSales(res);
+        console.log(columns)
+        console.log(prettyLines)
+        menu();
+    })
+}

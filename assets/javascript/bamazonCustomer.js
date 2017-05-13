@@ -5,10 +5,13 @@ var columnify = require('columnify');
 var itemsInStock = 0;
 var data;
 var dataArray = [];
+var validID = [];
 var columns;
 var newPurchaseID;
 var purchaseQuantity;
 var newStock = 0;
+var departmentName;
+var departmentSales;
 var totalSales;
 connection.connect(function(err) {
     if (err) throw err;
@@ -20,7 +23,9 @@ function browseInventory() {
         if (err) throw err;
         console.log(`${prettyLines}\n INVENTORY:\n${prettyLines}`)
         dataArray = [];
+        validID = [];
         for (var i = 0; i < res.length; i++) {
+            validID.push(res[i].item_id)
             itemsInStock = res.length;
             data = {
                 item_id: res[i].item_id,
@@ -47,7 +52,8 @@ function purchaseItem() {
         name: "productID",
         message: "Type the ID of the product you'd like to purchase:",
         validate: function(value) {
-            if (isNaN(value) === false && parseInt(value) < itemsInStock) {
+            // console.log(validID.indexOf(parseInt(value)))
+            if (isNaN(value) === false && validID.indexOf(parseInt(value)) !== -1) {
                 return true;
             }
             return false;
@@ -57,6 +63,7 @@ function purchaseItem() {
         name: "quantity",
         message: "How many would you like to purchase?",
         validate: function(value) {
+            // && parseInt(value) < itemsInStock && parseInt(value) > 0 
             if (isNaN(value) === false && parseInt(value) > 0) {
                 return true;
             }
@@ -64,7 +71,7 @@ function purchaseItem() {
         }
     }]).then(function(purchase) {
         newPurchaseID = purchase.productID;
-        purchaseQuantity = purchase.quantity;
+        purchaseQuantity = parseInt(purchase.quantity);
         checkInventory(newPurchaseID);
     })
 }
@@ -77,13 +84,12 @@ function checkInventory(newPurchase) {
             purchaseItem();
         } else {
             console.log("Purchase success!");
-            sales(res[0].price, purchaseQuantity);
+            departmentName = res[0].department_name;
+            sales(res[0].price, purchaseQuantity, res[0].department_name);
             newStock = res[0].stock_quantity - purchaseQuantity;
             update(newStock, newPurchaseID);
-
         }
     })
-
 }
 
 function update(stock, id) {
@@ -95,21 +101,19 @@ function update(stock, id) {
         function(err, res) {
             if (err) throw err;
         }
-    // connection.query('UPDATE departments SET ? WHERE?') [{
-
-    // }], function(err, res){
-
-    // }
-
-    console.log("Inventory updated");
+        // console.log("Inventory updated");
     browseInventory();
 }
 
-
-function sales(price, quantity) {
-	totalSales = parseInt(price) * parseInt(quantity);
-
+function sales(price, quantity, departmentID) {
+    totalSales = price * parseInt(quantity);
+    connection.query('SELECT * FROM departments WHERE department_name=?', [departmentID], function(err, res) {
+        if (err) throw err;
+        departmentSales = totalSales + res[0].total_sales;
+        connection.query('UPDATE departments SET total_sales=? WHERE department_name=?', [departmentSales, departmentID], function(err, res) {
+            if (err) throw err;
+        })
+    });
 }
-
 
 browseInventory()
