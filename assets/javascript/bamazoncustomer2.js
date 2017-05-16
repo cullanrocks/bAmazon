@@ -9,7 +9,9 @@ var validID = [];
 var columns;
 var newPurchaseID;
 var purchaseQuantity;
+var individualSales;
 var newStock = 0;
+var currentUser;
 var departmentName;
 var departmentSales;
 var totalSales;
@@ -18,6 +20,65 @@ connection.connect(function(err) {
     if (err) throw err;
     // console.log("connected as id " + connection.threadId);
 });
+
+function startMenu() {
+    inquirer.prompt([{
+        type: "list",
+        message: "Are you a new user or an existing user?",
+        choices: ['New User', 'Existing User'],
+        name: "userType"
+    }]).then(function(user) {
+        if (user.userType == "New User") {
+            newUser();
+        } else if (user.userType == "Existing User") {
+            login();
+        }
+    })
+}
+
+function newUser() {
+    inquirer.prompt([{
+        type: "input",
+        message: "Enter your email address.",
+        name: "email"
+    }, {
+        type: "password",
+        name: "password",
+        message: "Choose a password"
+    }, {
+        type: "password",
+        name: "confirm",
+        message: "Confirm your password"
+    }]).then(function(newUser) {
+        if (newUser.password === newUser.confirm) {
+
+
+            browseInventory()
+        } else {
+            console.log("Password didn't match. Please try again.");
+            newUser();
+        }
+    })
+}
+
+function login() {
+    inquirer.prompt([{
+        type: "input",
+        message: "Enter your email address.",
+        name: "email"
+    }, {
+        type: "password",
+        name: "confirm",
+        message: "Enter your password"
+    }]).then(function(existingUser) {
+        if (existingUser.password === existingUser.confirm) {
+            currentUser = existingUser.email;
+            connection.query(`SELECT * FROM users WHERE user_id=?`, [currentUser], function(err, res) {
+                browseInventory();
+            })
+        }
+    })
+}
 
 function browseInventory() {
     connection.query("SELECT * FROM products", function(err, res) {
@@ -91,12 +152,12 @@ function checkInventory(newPurchase) {
             departmentName = res[0].department_name;
             sales(res[0].price, purchaseQuantity, res[0].department_name);
             newStock = res[0].stock_quantity - purchaseQuantity;
-            update(newStock, newPurchaseID);
+            update(newStock, newPurchaseID,);
         }
     })
 }
 
-function update(stock, id) {
+function update(stock, id, eml, pswrd) {
     connection.query('UPDATE products SET ? WHERE ?', [{
             stock_quantity: stock
         }, {
@@ -105,6 +166,12 @@ function update(stock, id) {
         function(err, res) {
             if (err) throw err;
         }
+    connection.query('UPDATE users SET ? WHERE ?', [{
+            email: eml
+
+        }, {
+            password: pswrd
+        }])
         // console.log("Inventory updated");
     browseInventory();
 }
@@ -118,6 +185,8 @@ function sales(price, quantity, departmentID) {
             if (err) throw err;
         })
     });
+    connection.query('SELECT * FROM users WHERE ')
 }
 
-browseInventory()
+// browseInventory()
+startMenu()

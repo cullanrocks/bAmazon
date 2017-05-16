@@ -15,7 +15,7 @@ function menu() {
         type: "list",
         name: "menu",
         message: "Welcome, Mr. Manager. Please select an option:",
-        choices: ["View Inventory", "View Low Inventory", "Restock Inventory", "Add New Product", "View Sales Report"],
+        choices: ["View Inventory", "View Low Inventory", "Restock Inventory", "Add New Product"],
     }]).then(function(response) {
         switch (response.menu) {
             case "View Inventory":
@@ -30,9 +30,9 @@ function menu() {
             case "Add New Product":
                 addNew();
                 break;
-            case "View Sales Report":
-                salesReport();
-                break;
+                // case "View Sales Report":
+                //     salesReport();
+                //     break;
         }
     })
 }
@@ -69,7 +69,7 @@ function generateTable(res) {
 }
 
 function viewLow() {
-    connection.query("SELECT * FROM products WHERE stock_quantity<5", function(err, res) {
+    connection.query("SELECT * FROM products WHERE stock_quantity<=5", function(err, res) {
         if (err) throw err;
         console.log(`${prettyLines}\n=============================== LOW INVENTORY ==================================\n${prettyLines}`);
         dataArray = [];
@@ -116,24 +116,52 @@ function addNew() {
     inquirer.prompt([{
         type: "input",
         message: "What product would you like to add to the inventory?",
-        name: "product"
+        name: "product",
+        validate: function(value) {
+            // && parseInt(value) < itemsInStock && parseInt(value) > 0 
+            if (isNaN(value) === true) {
+                return true;
+            }
+            return false;
+        }
     }, {
         type: "input",
         message: "What department is this new product in?",
-        name: "department"
+        name: "department",
+        validate: function(value) {
+            // && parseInt(value) < itemsInStock && parseInt(value) > 0 
+            if (isNaN(value) === true) {
+                return true;
+            }
+            return false;
+        }
     }, {
         type: "input",
         message: "How much does this product cost?",
-        name: "price"
+        name: "price",
+        validate: function(value) {
+            // && parseInt(value) < itemsInStock && parseInt(value) > 0 
+            if (isNaN(value) === false && value > 0) {
+                return true;
+            }
+            return false;
+        }
     }, {
         type: "input",
         message: "How many of these items would you like to add to stock?",
-        name: "quantity"
+        name: "quantity",
+        validate: function(value) {
+            // && parseInt(value) < itemsInStock && parseInt(value) > 0 
+            if (isNaN(value) === false && value > 0) {
+                return true;
+            }
+            return false;
+        }
     }]).then(function(newItem) {
 
         connection.query("INSERT INTO products SET ?", {
-            product_name: newItem.product,
-            department_name: newItem.department,
+            product_name: newItem.product.toLowerCase(),
+            department_name: newItem.department.toLowerCase(),
             price: newItem.price,
             stock_quantity: newItem.quantity
         }, function(err, res) {
@@ -143,41 +171,14 @@ function addNew() {
 }
 
 function update(stock, id) {
-	connection.query('UPDATE products SET ? WHERE ?', [{
-        stock_quantity: stock
-    }, {
-        item_id: id
-    }]), function(err, res){
-		if (err) throw err;
-    }
-    // console.log("Inventory updated");
+    connection.query('UPDATE products SET ? WHERE ?', [{
+            stock_quantity: stock
+        }, {
+            item_id: id
+        }]),
+        function(err, res) {
+            if (err) throw err;
+        }
+        // console.log("Inventory updated");
     viewInventory();
-}
-function generateSales(res) {
-    for (var i = 0; i < res.length; i++) {
-        itemsInStock = res.length;
-        data = {
-            department_id: res[i].department_id,
-            department_name: res[i].department_name,
-            overhead_costs: `$${res[i].overhead_costs}`,
-            total_sales: `$${res[i].total_sales}`,
-        };
-        dataArray.push(data);
-        columns = columnify(dataArray, {
-            columns: ['department_id', 'department_name', 'overhead_costs', 'total_sales'],
-            columnSplitter: '__|__',
-            paddingChr: '_'
-        })
-    }
-}
-function salesReport(res){
-    connection.query('SELECT * FROM departments', function(err, res){
-        if (err) throw err;
-        console.log(`${prettyLines}\n=================================== SALES REPORT ===============================\n${prettyLines}`);
-        dataArray = [];
-        generateSales(res);
-        console.log(columns)
-        console.log(prettyLines)
-        menu();
-    })
 }
