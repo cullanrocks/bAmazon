@@ -1,7 +1,8 @@
-var prettyLines = "================================================================================";
+var prettyLines = "=====================================================================================================";
 var connection = require("./validation.js");
 var inquirer = require("inquirer");
 var columnify = require('columnify');
+var dataArray = [];
 
 connection.connect(function(err) {
     if (err) throw err;
@@ -45,13 +46,18 @@ function menu() {
 
 function viewInventory() {
     connection.query("SELECT * FROM products", function(err, res) {
-        if (err) throw err;
-        console.log(`${prettyLines}\n================================== FULL INVENTORY ==============================\n${prettyLines}`)
+        if (err){
+            console.log('Nothing In Inventory. Add products to inventory.');
+            menu();
+        } else {
+        console.log(`${prettyLines}\n============================================ FULL INVENTORY =========================================\n${prettyLines}`)
         dataArray = [];
+        let validID = []
+        // console.log(res)
         generateTable(res);
-        console.log(columns)
-        console.log(prettyLines)
+        columns ? console.log(columns) && console.log(prettyLines) : console.log('Nothing In Inventory. Add products to inventory.');
         menu();
+        }
     })
 }
 
@@ -67,6 +73,7 @@ function generateTable(res) {
             stock_quantity: res[i].stock_quantity
         };
         dataArray.push(data);
+        // validID.push(data.item_id);
         columns = columnify(dataArray, {
             columns: ['item_id', 'product_name', 'department_name', 'wholesale_price', 'listing_price', 'stock_quantity'],
             columnSplitter: '__|__',
@@ -78,7 +85,7 @@ function generateTable(res) {
 function viewLow() {
     connection.query("SELECT * FROM products WHERE stock_quantity<=5", function(err, res) {
         if (err) throw err;
-        console.log(`${prettyLines}\n=============================== LOW INVENTORY ==================================\n${prettyLines}`);
+        console.log(`${prettyLines}\n============================================ LOW INVENTORY ==========================================\n${prettyLines}`);
         dataArray = [];
         generateTable(res);
         console.log(columns);
@@ -111,10 +118,10 @@ function restock() {
     }]).then(function(purchase) {
         newPurchaseID = purchase.productID;
         purchaseQuantity = purchase.quantity;
-        connection.query(`SELECT * FROM products WHERE item_id=?`, [purchase.productID], function(err, res) {
+        connection.query(`SELECT * FROM products WHERE item_id=?`, [newPurchaseID], function(err, res) {
+            if (err) throw err;
             newStock = parseInt(res[0].stock_quantity) + parseInt(purchase.quantity);
-            console.log(newStock)
-            update(newPurchaseID, newStock);
+            update(newPurchaseID, newStock, res[0].listing_price);
         })
     })
 }
@@ -144,7 +151,6 @@ function changePrice() {
         newPurchaseID = purchase.productID;
         console.log(purchase.newPrice)
         connection.query(`SELECT * FROM products WHERE item_id=?`, [purchase.productID], function(err, res) {
-            console.log(res)
             update(newPurchaseID, res[0].stock_quantity, purchase.newPrice);
         })
     })
@@ -203,6 +209,18 @@ function addNew() {
             return false;
         }
     }]).then(function(newItem) {
+        connection.query('SELECT * FROM departments WHERE department_name=?', [newItem.department], function(err, res) {
+            if (err) console.log('error line 213: ' + err);
+            console.log(res)
+            let overheadCosts = parseFloat(res[0].overhead_costs) - parseFloat(newItem.quantity * newItem.wholesalePrice);
+            console.log(newItem.wholsesalePrice)
+            let netGainNetLoss = parseFloat(res[0].netgain_netloss + overheadCosts).toFixed(2);
+            connection.query('UPDATE departments SET overhead_costs = ?, netgain_netloss = ? WHERE department_name = ?', [overheadCosts, netGainNetLoss, newItem.department.toLowerCase()], function(err, res) {
+                if (err) console.log('error line 217: ' + err);
+                console.log("Supervisor's Departments Sales Report Updated.")
+                viewInventory();
+        })
+    });
         connection.query("INSERT INTO products SET ?", {
             product_name: newItem.product.toLowerCase(),
             department_name: newItem.department.toLowerCase(),
@@ -210,6 +228,7 @@ function addNew() {
             wholesale_price: newItem.wholesalePrice,
             stock_quantity: newItem.quantity
         }, function(err, res) {
+            console.log(`${newItem.quantity} ${newItem.product} added to inventory.`)
             viewInventory();
         })
     })
@@ -224,7 +243,7 @@ function update(id, stock, newPrice) {
         }]),
         function(err, res) {
             if (err) throw err;
+            console.log(`Inventory updated. Price of ${res[0].product_name} changed to ${res[0].listing_price}.`);
         }
-        // console.log("Inventory updated");
     viewInventory();
 }

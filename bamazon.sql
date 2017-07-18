@@ -2,36 +2,34 @@
 USE Bamazon;
 -- 
 -- CREATE TABLE products (
--- 	   item INTEGER NOT NULL AUTO_INCREMENT,
+-- 	   item_id INTEGER NOT NULL AUTO_INCREMENT,
 --     product_name VARCHAR(100) NOT NULL,
 --     department_name VARCHAR(100) NOT NULL,
---     price DECIMAL (7, 2) NOT NULL, 
---     stock_quantity INTEGER(10) NOT NULL,
---     PRIMARY KEY (item)
+--     wholesale_price DECIMAL (11, 2) NOT NULL, 
+-- 	listing_price DECIMAL (11, 2) NOT NULL,
+--     stock_quantity INTEGER(11) NOT NULL,
+--     PRIMARY KEY (item_id)
 -- );
--- 
+
 -- CREATE TABLE departments (
--- 	department_id INTEGER NOT NULL AUTO_INCREMENT,
---     department_name VARCHAR(100) NOT NULL,
---     overhead_costs DECIMAL (7, 2) NOT NULL, 
---     total_sales DECIMAL (7, 2) NOT NULL,
+-- 		department_id INTEGER NOT NULL AUTO_INCREMENT,
+--     	department_name VARCHAR(100) NOT NULL,
+--     	overhead_costs DECIMAL (11, 2) NOT NULL, 
+--     	total_sales DECIMAL (11, 2) NOT NULL,
+-- 		netgain_netloss DECIMAL (11, 2),
 --     PRIMARY KEY (department_id)
 -- );
--- 
+
 -- CREATE TABLE users (
 -- 		user_id INTEGER NOT NULL AUTO_INCREMENT,
 --     	email VARCHAR(100) NOT NULL,
 --     	password VARCHAR(100) NOT NULL,
---		salt VARCHAR(100) NOT NULL,
+-- 		salt VARCHAR(100) NOT NULL,
+-- 		purchases JSON,
+-- 		total_purchases DECIMAL(11, 2),
 --     	PRIMARY KEY (user_id)
 -- );
 -- 
--- CREATE TABLE individualsales (
--- 		individual INTEGER NOT NULL AUTO_INCREMENT,
---     	email VARCHAR(100) NOT NULL,
--- 		total_sales DECIMAL (7, 2) NOT NULL,
---     	PRIMARY KEY (individual)
--- );
 -- 
 -- 
 -- 

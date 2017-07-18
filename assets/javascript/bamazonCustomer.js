@@ -1,23 +1,25 @@
-var prettyLines = "===============================================================================";
-var connection = require("./validation.js");
-var inquirer = require("inquirer");
-var columnify = require('columnify');
-var Cryptr = require('cryptr');
-var cryptr = new Cryptr('myTotalySecretKey');
-var itemsInStock = 0;
-var data;
-var dataArray = [];
-var validID = [];
-var columns;
-var newPurchaseID;
-var purchaseQuantity;
-var individualSales;
-var newStock = 0;
-var currentUser;
-var departmentName;
-var departmentSales;
-var thisSale;
-var numbersAndLetters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+let prettyLines = "===============================================================================";
+let connection = require("./validation.js");
+let inquirer = require("inquirer");
+let columnify = require('columnify');
+let Cryptr = require('cryptr');
+let cryptr = new Cryptr('myTotalySecretKey');
+let itemsInStock = 0;
+let data;
+let dataArray = [];
+let validID = [];
+let columns;
+let newPurchaseID;
+let purchaseQuantity;
+let individualSales;
+let newStock = 0;
+let currentUser;
+let departmentName;
+let departmentSales;
+let netGainNetLoss;
+
+let thisSale;
+let numbersAndLetters = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 connection.connect(function(err) {
     if (err) throw err;
@@ -114,14 +116,13 @@ function generateTable(res) {
             item_id: res[i].item_id,
             product_name: res[i].product_name,
             department_name: res[i].department_name,
-            wholesale_price: `$${res[i].wholesale_price}`,
-            listing_price: `$${res[i].listing_price}`,
+            price: `$${res[i].listing_price}`,
             stock_quantity: res[i].stock_quantity
         };
         dataArray.push(data);
         validID.push(data.item_id);
         columns = columnify(dataArray, {
-            columns: ['item_id', 'product_name', 'department_name', 'wholesale_price', 'listing_price', 'stock_quantity'],
+            columns: ['item_id', 'product_name', 'department_name', 'price', 'stock_quantity'],
             columnSplitter: '__|__',
             paddingChr: '_'
         })
@@ -165,30 +166,32 @@ function checkInventory(newPurchase) {
             console.log("I'm sorry, but you asked for more than we have in stock. Please try again.");
             purchaseItem();
         } else {
-            console.log(`You purchased ${purchaseQuantity} ${res[0].product_name}`);
+            let total = purchaseQuantity * res[0].listing_price
+            console.log(`You purchased ${purchaseQuantity} ${res[0].product_name} for a total of $${total}.`);
             departmentName = res[0].department_name;
-            sales(res[0].price, purchaseQuantity, res[0].department_name);
+            sales(res[0].department_name, res[0].listing_price, purchaseQuantity);
             newStock = res[0].stock_quantity - purchaseQuantity;
-            update(newStock, newPurchaseID);
+            update(newPurchaseID, newStock);
         }
     })
 }
 
-function update(newStock, id) {
+function update(id, newStock) {
     connection.query('UPDATE products SET stock_quantity=? WHERE item_id=?', [newStock, id],
         function(err, res) {
-            if (err) console.log('error line 173: ' + err);
+            if (err) console.log('error line 182: ' + err);
+            browseInventory();
         })
-    browseInventory();
 }
 
-function sales(price, quantity, departmentID) {
+function sales(departmentID, price, quantity) {
     thisSale = price * parseInt(quantity);
-    connection.query('SELECT * FROM departments WHERE department_name=?', [departmentID], function(err, res) {
-        if (err) console.log('error line 182: ' + err)
+    connection.query('SELECT * FROM departments WHERE department_name = ?', [departmentID], function(err, res) {
+        if (err) console.log('error line 190: ' + err)
         departmentSales = thisSale + res[0].total_sales;
-        connection.query('UPDATE departments SET total_sales=? WHERE department_name=?', [departmentSales, departmentID], function(err, res) {
-            if (err) console.log('error line 186: ' + err);
+        netGainNetLoss = res[0].overhead_costs + departmentSales; 
+        connection.query('UPDATE departments SET total_sales = ?, netgain_netloss = ? WHERE department_name = ?', [departmentSales, netGainNetLoss, departmentID], function(err, res) {
+            if (err) console.log('error line 194: ' + err);
         })
     });
 }
