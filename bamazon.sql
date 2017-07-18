@@ -1,5 +1,5 @@
 -- CREATE DATABASE Bamazon;
--- USE Bamazon;
+USE Bamazon;
 -- 
 -- CREATE TABLE products (
 -- 	   item INTEGER NOT NULL AUTO_INCREMENT,
@@ -19,22 +19,23 @@
 -- );
 -- 
 -- CREATE TABLE users (
--- 	user_id INTEGER NOT NULL AUTO_INCREMENT,
---     email VARCHAR(100) NOT NULL,
---     password VARCHAR(100) NOT NULL,
---     PRIMARY KEY (user_id)
+-- 		user_id INTEGER NOT NULL AUTO_INCREMENT,
+--     	email VARCHAR(100) NOT NULL,
+--     	password VARCHAR(100) NOT NULL,
+--		salt VARCHAR(100) NOT NULL,
+--     	PRIMARY KEY (user_id)
 -- );
 -- 
 -- CREATE TABLE individualsales (
--- 	individual INTEGER NOT NULL AUTO_INCREMENT,
---     email VARCHAR(100) NOT NULL,
--- 	total_sales DECIMAL (7, 2) NOT NULL,
---     PRIMARY KEY (individual)
+-- 		individual INTEGER NOT NULL AUTO_INCREMENT,
+--     	email VARCHAR(100) NOT NULL,
+-- 		total_sales DECIMAL (7, 2) NOT NULL,
+--     	PRIMARY KEY (individual)
 -- );
 -- 
 -- 
 -- 
--- SELECT * FROM products;
+SELECT * FROM products;
 -- SELECT * FROM users;
 -- SELECT * FROM departments;
 -- SLEECT * FROM individual_sales;

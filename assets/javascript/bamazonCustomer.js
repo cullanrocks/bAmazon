@@ -2,6 +2,8 @@ var prettyLines = "=============================================================
 var connection = require("./validation.js");
 var inquirer = require("inquirer");
 var columnify = require('columnify');
+var Cryptr = require('cryptr');
+var cryptr = new Cryptr('myTotalySecretKey');
 var itemsInStock = 0;
 var data;
 var dataArray = [];
@@ -9,15 +11,90 @@ var validID = [];
 var columns;
 var newPurchaseID;
 var purchaseQuantity;
+var individualSales;
 var newStock = 0;
+var currentUser;
 var departmentName;
 var departmentSales;
-var totalSales;
+var thisSale;
+var numbersAndLetters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+// console.log(Math.floor(Math.random() * numbersAndLetters.length));
 
 connection.connect(function(err) {
     if (err) throw err;
     // console.log("connected as id " + connection.threadId);
 });
+
+function startMenu() {
+    inquirer.prompt([{
+        type: "list",
+        message: "Are you a new user or an existing user?",
+        choices: ['New User', 'Existing User'],
+        name: "userType"
+    }]).then(function(user) {
+        if (user.userType == "New User") {
+            newUser();
+        } else if (user.userType == "Existing User") {
+            login();
+        }
+    })
+}
+
+function newUser() {
+    inquirer.prompt([{
+        type: "input",
+        message: "Enter your email address.",
+        name: "email"
+    }, {
+        type: "password",
+        name: "password",
+        message: "Choose a password"
+    }, {
+        type: "password",
+        name: "confirm",
+        message: "Confirm your password"
+    }]).then(function(newUser) {
+        if (newUser.password === newUser.confirm) {
+            let salt = '';
+            for(let i = 0; i < 32; i++){
+                salt += numbersAndLetters[Math.floor(Math.random() * numbersAndLetters.length)];
+            }
+            connection.query("INSERT INTO users SET ?", {
+                email: newUser.email,
+                password: cryptr.encrypt(salt.concat(newUser.confirm)),
+                salt: salt
+            }, function(err, res){
+                if (err) throw err;
+                browseInventory()
+            })
+        } else {
+            console.log("Password didn't match. Please try again.");
+            newUser();
+        }
+    })
+}
+
+function login() {
+    inquirer.prompt([{
+        type: "input",
+        message: "Enter your email address.",
+        name: "email"
+    }, {
+        type: "password",
+        name: "password",
+        message: "Enter your password"
+    }]).then(function(existingUser) {
+        connection.query(`SELECT * FROM users WHERE email=?`, [existingUser.email], function(err, res){
+            if(res[0].salt.concat(existingUser.password) === cryptr.decrypt(res[0].password)){
+                console.log('Login Successful')
+                browseInventory();
+            } else {
+                console.log("Password didn't match. Please try again.");
+                login();
+            }
+        })
+    })
+}
 
 function browseInventory() {
     connection.query("SELECT * FROM products", function(err, res) {
@@ -81,13 +158,14 @@ function purchaseItem() {
 }
 
 function checkInventory(newPurchase) {
-    connection.query(`SELECT * FROM products WHERE item_id=?`, [newPurchaseID], function(err, res) {
+    connection.query(`SELECT * FROM products WHERE item_id=?`, [newPurchase], function(err, res) {
+        // console.log(res)
         if (err) throw err;
         if (purchaseQuantity > res[0].stock_quantity) {
             console.log("I'm sorry, but you asked for more than we have in stock. Please try again.");
             purchaseItem();
         } else {
-            console.log(`You purchased ${purchaseQuantity} `);
+            console.log(`You purchased ${purchaseQuantity} ${res[0].product_name}`);
             departmentName = res[0].department_name;
             sales(res[0].price, purchaseQuantity, res[0].department_name);
             newStock = res[0].stock_quantity - purchaseQuantity;
@@ -96,28 +174,23 @@ function checkInventory(newPurchase) {
     })
 }
 
-function update(stock, id) {
-    connection.query('UPDATE products SET ? WHERE ?', [{
-            stock_quantity: stock
-        }, {
-            item_id: id
-        }]),
+function update(newStock, id) {
+    connection.query('UPDATE products SET stock_quantity=? WHERE item_id=?', [newStock, id],
         function(err, res) {
-            if (err) throw err;
-        }
-        // console.log("Inventory updated");
+            if (err) console.log('error line 173: ' + err);
+        })
     browseInventory();
 }
 
 function sales(price, quantity, departmentID) {
-    totalSales = price * parseInt(quantity);
+    thisSale = price * parseInt(quantity);
     connection.query('SELECT * FROM departments WHERE department_name=?', [departmentID], function(err, res) {
-        if (err) throw err;
-        departmentSales = totalSales + res[0].total_sales;
+        if (err) console.log('error line 182: ' + err)
+        departmentSales = thisSale + res[0].total_sales;
         connection.query('UPDATE departments SET total_sales=? WHERE department_name=?', [departmentSales, departmentID], function(err, res) {
-            if (err) throw err;
+            if (err) console.log('error line 186: ' + err);
         })
     });
 }
 
-browseInventory()
+startMenu()
