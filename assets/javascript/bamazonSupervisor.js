@@ -28,24 +28,25 @@ function menu() {
     })
 }
 
-function generateTable(res) {
-    for (var i = 0; i < res.length; i++) {
-        itemsInStock = res.length;
-        data = {
-            item_id: res[i].item_id,
-            product_name: res[i].product_name,
-            department_name: res[i].department_name,
-            price: `$${res[i].price}`,
-            stock_quantity: res[i].stock_quantity
-        };
-        dataArray.push(data);
-        columns = columnify(dataArray, {
-            columns: ['item_id', 'product_name', 'department_name', 'price', 'stock_quantity'],
-            columnSplitter: '__|__',
-            paddingChr: '_'
-        })
-    }
-}
+// function generateTable(res) {
+//     for (var i = 0; i < res.length; i++) {
+//         itemsInStock = res.length;
+//         data = {
+//             item_id: res[i].item_id,
+//             product_name: res[i].product_name,
+//             department_name: res[i].department_name,
+//             wholesale_price: `$${res[i].wholesale_price}`,
+//             listing_price: `${res[i].listing_price}`,
+//             stock_quantity: res[i].stock_quantity
+//         };
+//         dataArray.push(data);
+//         columns = columnify(dataArray, {
+//             columns: ['item_id', 'product_name', 'department_name', 'wholesale_price', 'listing_price', 'stock_quantity'],
+//             columnSplitter: '__|__',
+//             paddingChr: '_'
+//         })
+//     }
+// }
 
 function createDepartment() {
     inquirer.prompt([{
