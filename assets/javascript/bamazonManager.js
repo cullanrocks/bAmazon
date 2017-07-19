@@ -211,12 +211,11 @@ function addNew() {
         connection.query('SELECT * FROM departments WHERE department_name=?', [newItem.department], function(err, res) {
             if (err) console.log('error line 213: ' + err);
             let overheadCosts = parseFloat(res[0].overhead_costs) - parseFloat(newItem.quantity * newItem.wholesalePrice);
-            console.log(newItem.wholsesalePrice)
+            // console.log(newItem.wholsesalePrice)
             let netGainNetLoss = parseFloat(res[0].netgain_netloss + overheadCosts).toFixed(2);
             connection.query('UPDATE departments SET overhead_costs = ?, netgain_netloss = ? WHERE department_name = ?', [overheadCosts, netGainNetLoss, newItem.department.toLowerCase()], function(err, res) {
                 if (err) console.log('error line 217: ' + err);
                 console.log("Supervisor's Departments Sales Report Updated.")
-                viewInventory();
         })
     });
         connection.query("INSERT INTO products SET ?", {
@@ -226,7 +225,7 @@ function addNew() {
             wholesale_price: newItem.wholesalePrice,
             stock_quantity: newItem.quantity
         }, function(err, res) {
-            console.log(`${newItem.quantity} ${newItem.product} added to inventory.`)
+            console.log(`${newItem.quantity} ${newItem.product} added to inventory listed at $${newItem.listingPrice}.`)
             viewInventory();
         })
     })
