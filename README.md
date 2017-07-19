@@ -3,6 +3,7 @@
 bAmazon = a server side, node.js based application that is a full eCommerce product management system. Create departments, order &|| restock inventory, customer login with encrypted passwords with hash salts, track purchases & generate sales reports.
 
 ##Inscrutions
+
 ###1) To start, please open and run the bamazon.sql in your SQL application. 
 
 ###2) The script will create a database with three tables, on for Users, one for Products, and one for Departments. 
