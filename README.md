@@ -38,6 +38,7 @@ var connection = mysql.createConnection({
 node bamazonSupervisor.js
 ```
 You should see this:
+
 ![Screenshot](assets/images/supervisor/supervisorHomepage.png)
 
  Navigate to Create a new Department, where you will be prompted to input the name of the department, your overhead costs for the department and your total sales for the department, if any. The application will automatically calculate your net gain or net loss. You should automatically see the new department created once you go to view sales report.
