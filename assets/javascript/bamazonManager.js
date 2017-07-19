@@ -1,8 +1,9 @@
-var prettyLines = "=====================================================================================================";
-var connection = require("./validation.js");
-var inquirer = require("inquirer");
-var columnify = require('columnify');
-var dataArray = [];
+let prettyLines = "=====================================================================================================";
+let connection = require("./validation.js");
+let inquirer = require("inquirer");
+let columnify = require('columnify');
+let dataArray = [];
+let validID = []
 
 connection.connect(function(err) {
     if (err) throw err;
@@ -37,9 +38,6 @@ function menu() {
             case 'Return Product to Wholesale':
                 sellOff();
                 break;
-                // case "View Sales Report":
-                //     salesReport();
-                //     break;
         }
     })
 }
@@ -52,8 +50,7 @@ function viewInventory() {
         } else {
         console.log(`${prettyLines}\n============================================ FULL INVENTORY =========================================\n${prettyLines}`)
         dataArray = [];
-        let validID = []
-        // console.log(res)
+        // dataArray.push(console.log(res[0])
         generateTable(res);
         columns ? console.log(columns) && console.log(prettyLines) : console.log('Nothing In Inventory. Add products to inventory.');
         menu();
@@ -62,7 +59,7 @@ function viewInventory() {
 }
 
 function generateTable(res) {
-    for (var i = 0; i < res.length; i++) {
+    for (let i = 0; i < res.length; i++) {
         itemsInStock = res.length;
         data = {
             item_id: res[i].item_id,
@@ -73,13 +70,15 @@ function generateTable(res) {
             stock_quantity: res[i].stock_quantity
         };
         dataArray.push(data);
-        // validID.push(data.item_id);
+        // filling the validID array when we generate the table will help when we later need to check if any of our products are valid
+        validID.push(res[i].item_id);
         columns = columnify(dataArray, {
             columns: ['item_id', 'product_name', 'department_name', 'wholesale_price', 'listing_price', 'stock_quantity'],
             columnSplitter: '__|__',
             paddingChr: '_'
         })
     }
+    // console.log(validID)
 }
 
 function viewLow() {
@@ -211,7 +210,6 @@ function addNew() {
     }]).then(function(newItem) {
         connection.query('SELECT * FROM departments WHERE department_name=?', [newItem.department], function(err, res) {
             if (err) console.log('error line 213: ' + err);
-            console.log(res)
             let overheadCosts = parseFloat(res[0].overhead_costs) - parseFloat(newItem.quantity * newItem.wholesalePrice);
             console.log(newItem.wholsesalePrice)
             let netGainNetLoss = parseFloat(res[0].netgain_netloss + overheadCosts).toFixed(2);

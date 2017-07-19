@@ -27,6 +27,8 @@ USE Bamazon;
 -- 		salt VARCHAR(100) NOT NULL,
 -- 		purchases JSON,
 -- 		total_purchases DECIMAL(11, 2),
+--		is_manager BOOLEAN DEFAULT false,
+--		is_supervisor BOOLEAN DEFAULT false,
 --     	PRIMARY KEY (user_id)
 -- );
 -- 
