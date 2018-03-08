@@ -145,7 +145,7 @@ function purchaseItem() {
         name: "quantity",
         message: "How many would you like to purchase?",
         validate: function(value) {
-            // && parseInt(value) < itemsInStock && parseInt(value) > 0 
+            // && parseInt(value) < itemsInStock && parseInt(value) > 0
             if (isNaN(value) === false && parseInt(value) > 0) {
                 return true;
             }
@@ -189,7 +189,7 @@ function sales(departmentID, price, quantity) {
     connection.query('SELECT * FROM departments WHERE department_name = ?', [departmentID], function(err, res) {
         if (err) console.log('error line 190: ' + err)
         departmentSales = thisSale + res[0].total_sales;
-        netGainNetLoss = res[0].overhead_costs + departmentSales; 
+        netGainNetLoss = res[0].overhead_costs + departmentSales;
         connection.query('UPDATE departments SET total_sales = ?, netgain_netloss = ? WHERE department_name = ?', [departmentSales, netGainNetLoss, departmentID], function(err, res) {
             if (err) console.log('error line 194: ' + err);
         })

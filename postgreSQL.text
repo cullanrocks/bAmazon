@@ -1,0 +1,29 @@
+bAmazon DATABASE SCHEMAS to use with POSTGRESQL
+
+CREATE TABLE products (
+	  item_id SERIAL NOT NULL PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    department_name VARCHAR(100) NOT NULL,
+    wholesale_price DECIMAL (11, 2) NOT NULL,
+	  listing_price DECIMAL (11, 2) NOT NULL,
+    stock_quantity INT NOT NULL
+);
+
+CREATE TABLE departments (
+		department_id SERIAL NOT NULL PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL,
+    overhead_costs DECIMAL (11, 2) NOT NULL,
+    total_sales DECIMAL (11, 2) NOT NULL,
+		netgain_netloss DECIMAL (11, 2)
+);
+
+CREATE TABLE users (
+		user_id SERIAL NOT NULL PRIMARY KEY,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+		salt VARCHAR(100) NOT NULL,
+		purchases JSON,
+		total_purchases DECIMAL(11, 2),
+		is_manager BOOLEAN DEFAULT false,
+		is_supervisor BOOLEAN DEFAULT false
+);
